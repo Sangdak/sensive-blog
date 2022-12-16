@@ -33,7 +33,7 @@ def serialize_tag(tag):
 
 
 def index(request):
-    most_popular_posts = Post.objects.annotate(count_likes=Count('likes')).order_by('-count_likes')[:5]
+    most_popular_posts = Post.objects.annotate(count_likes=Count('likes')).order_by('-count_likes').prefetch_related('author')[:5]
     # most_popular_posts = sorted(
     #     Post.objects.annotate(count_likes=Count('likes')),
     #     key=lambda post: get_likes_count(post),
@@ -41,7 +41,7 @@ def index(request):
     # most_popular_posts = sorted(Post.objects.all(), key=lambda post: get_likes_count(post))[-5:]
     # most_popular_posts = []  # TODO. Как это посчитать?
 
-    most_fresh_posts = Post.objects.order_by('-published_at')[:5]
+    most_fresh_posts = Post.objects.order_by('-published_at').prefetch_related('author')[:5]
     # fresh_posts = Post.objects.order_by('published_at')
     # most_fresh_posts = list(fresh_posts)[-5:]
 
