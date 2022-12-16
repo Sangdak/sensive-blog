@@ -33,11 +33,11 @@ def serialize_tag(tag):
 
 
 def index(request):
-    # most_popular_posts = Post.objects.annotate(count_likes=Count('likes')).order_by('-count_likes')[5:]
-    most_popular_posts = sorted(
-        Post.objects.annotate(count_likes=Count('likes')),
-        key=lambda post: get_likes_count(post),
-    )[-5:]
+    most_popular_posts = Post.objects.annotate(count_likes=Count('likes')).order_by('-count_likes')[:5]
+    # most_popular_posts = sorted(
+    #     Post.objects.annotate(count_likes=Count('likes')),
+    #     key=lambda post: get_likes_count(post),
+    # )[-5:]
     # most_popular_posts = sorted(Post.objects.all(), key=lambda post: get_likes_count(post))[-5:]
     # most_popular_posts = []  # TODO. Как это посчитать?
 
