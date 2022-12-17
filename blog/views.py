@@ -30,19 +30,22 @@ def serialize_post_optimized(post):
         'title': post.title,
         'teaser_text': post.text[:200],
         'author': post.author.username,
-        'comments_amount': len(Comment.objects.filter(post=post)),
+        # 'comments_amount': len(Comment.objects.filter(post=post)),
+        'comments_amount': post.comments.count(),
         'image_url': post.image.url if post.image else None,
         'published_at': post.published_at,
         'slug': post.slug,
         'tags': [serialize_tag(tag) for tag in post.tags.all()],
-        'first_tag_title': post.tags.all()[0].title,
+        # 'first_tag_title': post.tags.all()[0].title,
+        'first_tag_title': post.tags.first().title,
     }
 
 
 def serialize_tag(tag):
     return {
         'title': tag.title,
-        'posts_with_tag': len(Post.objects.filter(tags=tag)),
+        # 'posts_with_tag': len(Post.objects.filter(tags=tag)),
+        'posts_with_tag': tag.posts.count(),
     }
 
 
@@ -83,9 +86,7 @@ def index(request):
     # fresh_posts = Post.objects.order_by('published_at')
     # most_fresh_posts = list(fresh_posts)[-5:]
 
-    most_popular_tags = Tag.objects.annotate(
-        posts_count=Count('posts'),
-    ).order_by('-posts_count')[:5]
+    most_popular_tags = Tag.objects.popular()[:5]
     # tags = Tag.objects.all()
     # popular_tags = sorted(tags, key=get_related_posts_count)
     # most_popular_tags = popular_tags[-5:]
@@ -118,16 +119,18 @@ def post_detail(request, slug):
         'text': post.text,
         'author': post.author.username,
         'comments': serialized_comments,
-        'likes_amount': len(likes),
+        'likes_amount': likes.count(),
         'image_url': post.image.url if post.image else None,
         'published_at': post.published_at,
         'slug': post.slug,
         'tags': [serialize_tag(tag) for tag in related_tags],
     }
 
-    all_tags = Tag.objects.all()
-    popular_tags = sorted(all_tags, key=get_related_posts_count)
-    most_popular_tags = popular_tags[-5:]
+    # all_tags = Tag.objects.all()
+    # popular_tags = sorted(all_tags, key=get_related_posts_count)
+    popular_tags = Tag.objects.popular()
+    # most_popular_tags = popular_tags[-5:]
+    most_popular_tags = popular_tags[:5]
 
     most_popular_posts = []  # TODO. Как это посчитать?
 
@@ -144,9 +147,11 @@ def post_detail(request, slug):
 def tag_filter(request, tag_title):
     tag = Tag.objects.get(title=tag_title)
 
-    all_tags = Tag.objects.all()
-    popular_tags = sorted(all_tags, key=get_related_posts_count)
-    most_popular_tags = popular_tags[-5:]
+    # all_tags = Tag.objects.all()
+    # popular_tags = sorted(all_tags, key=get_related_posts_count)
+    popular_tags = Tag.objects.popular()
+    # most_popular_tags = popular_tags[-5:]
+    most_popular_tags = popular_tags[:5]
 
     most_popular_posts = []  # TODO. Как это посчитать?
 
