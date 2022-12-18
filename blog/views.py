@@ -30,13 +30,13 @@ def serialize_post_optimized(post):
         'title': post.title,
         'teaser_text': post.text[:200],
         'author': post.author.username,
-        'comments_amount': len(Comment.objects.filter(post=post)),
-        # 'comments_amount': post.comments_count,
+        # 'comments_amount': len(Comment.objects.filter(post=post)),
+        'comments_amount': post.comments.count(),
         'image_url': post.image.url if post.image else None,
         'published_at': post.published_at,
         'slug': post.slug,
         # 'tags': [serialize_tag(tag) for tag in post.tags.all()],
-        'tags': [serialize_tag(tag) for tag in post.tags.all()],
+        'tags': [serialize_tag(tag) for tag in post.tags.annotate(Count('posts'))],
         # 'first_tag_title': post.tags.all()[0].title,
         'first_tag_title': post.tags.first().title,
     }
@@ -46,12 +46,12 @@ def serialize_tag(tag):
     return {
         'title': tag.title,
         # 'posts_with_tag': len(Post.objects.filter(tags=tag)),
-        'posts_with_tag': tag.posts.count,
+        'posts_with_tag': tag.posts.count(),
     }
 
 
 def index(request):
-    most_popular_posts = Post.objects.popular().prefetch_related('author')[:5].fetch_with_comments_count()
+    most_popular_posts = Post.objects.popular().prefetch_related('author', 'tags')[:5].fetch_with_comments_count()
 
     # most_popular_posts = Post.objects.annotate(
     #     likes_count=Count('likes'),
@@ -85,7 +85,7 @@ def index(request):
     # most_popular_posts = sorted(Post.objects.all(), key=lambda post: get_likes_count(post))[-5:]
     # most_popular_posts = []  # TODO. Как это посчитать?
 
-    most_fresh_posts = Post.objects.prefetch_related('author').order_by('-published_at')[:5]
+    most_fresh_posts = Post.objects.prefetch_related('author', 'tags').order_by('-published_at')[:5]
     # most_fresh_posts = Post.objects.annotate(Count('comments')) \
     #     .prefetch_related('author').order_by('-published_at')[:5]
     # fresh_posts = Post.objects.order_by('published_at')
