@@ -8,6 +8,19 @@ class PostQuerySet(models.QuerySet):
     def year(self, year):
         return self.filter(published_at__year=year).order_by('published_at')
 
+    def popular(self):
+        return self.annotate(likes_count=Count('likes')).order_by('-likes_count')
+
+    def fetch_with_comments_count(self):
+        most_popular_posts_ids = [post.id for post in self]
+        posts_with_comments = Post.objects.filter(id__in=most_popular_posts_ids).annotate(
+            comments_count=Count('comments'))
+        ids_and_comments = posts_with_comments.values_list('id', 'comments_count')
+        count_for_id = dict(ids_and_comments)
+        for post in self:
+            post.comments_count = count_for_id[post.id]
+        return self
+
 
 class TagQuerySet(models.QuerySet):
     def popular(self):
@@ -15,7 +28,6 @@ class TagQuerySet(models.QuerySet):
 
 
 class Post(models.Model):
-    objects = PostQuerySet.as_manager()
     title = models.CharField('Заголовок', max_length=200)
     text = models.TextField('Текст')
     slug = models.SlugField('Название в виде url', max_length=200)
@@ -37,6 +49,8 @@ class Post(models.Model):
         related_name='posts',
         verbose_name='Теги')
 
+    objects = PostQuerySet.as_manager()
+
     def __str__(self):
         return self.title
 
@@ -50,8 +64,9 @@ class Post(models.Model):
 
 
 class Tag(models.Model):
-    objects = TagQuerySet.as_manager()
     title = models.CharField('Тег', max_length=20, unique=True)
+
+    objects = TagQuerySet.as_manager()
 
     def __str__(self):
         return self.title
