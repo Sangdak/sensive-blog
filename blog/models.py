@@ -71,6 +71,7 @@ class TagQuerySet(models.QuerySet):
         return popular_tags
 
 
+
 class Tag(models.Model):
 
     title = models.CharField('Тег', max_length=20, unique=True)
